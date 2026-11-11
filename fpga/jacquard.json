@@ -1,0 +1,8 @@
+{
+  "top": "vga",
+  "build": {
+    "board": "upduino-v3.1",
+    "top": "vga",
+    "frontend": "slang"
+  }
+}
