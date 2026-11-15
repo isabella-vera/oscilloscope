@@ -1,8 +1,15 @@
 {
-  "top": "vga",
+  "top": "vga_sine",
   "build": {
     "board": "upduino-v3.1",
-    "top": "vga",
-    "frontend": "slang"
+    "top": "vga_sine",
+    "frontend": "slang",
+    "pins": {
+      "B": 13,
+      "G": 12,
+      "R": 20,
+      "vga_h_sync": 21,
+      "vga_v_sync": 10
+    }
   }
 }
