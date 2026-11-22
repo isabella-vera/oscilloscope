@@ -1,52 +1,67 @@
+// Esteban Gonzalez and Isabella Vera
+// estgonzalez@g.hmc.edu  ivera@g.hmc.edu
+// 11/15/2026
 // trigger.h
-// Rising-edge trigger on an analog input (0 - 3.3 V) using ADC1
-// on the STM32L432KC. Input pin is set below.
+// Header file for trigger. Sets all the settings necessary. 
+
 
 #ifndef TRIGGER_H
 #define TRIGGER_H
 
 #include <stdint.h>
+// Measurement signal pin
+#define TRIG_GPIO        GPIOB                
+#define TRIG_GPIO_EN     RCC_AHB2ENR_GPIOBEN  
+#define TRIG_PIN         0                    
+#define TRIG_ADC_CH      15                   
 
-// ---------------- Input pin ----------------
-// Pick a pin from this table and set the three defines to match.
-//
-//   Pin   Nucleo   ADC channel   Notes
-//   PA0   A0       5
-//   PA1   A1       6
-//   PA3   A2       8
-//   PA4   A3       9
-//   PA5   A4       10            shorted to D5 (PB6) by SB18 by default
-//   PA6   A5       11            shorted to D4 (PB7) by SB16 by default
-//   PA7   A6       12
-//   PB0   D3       15
-//   PB1   D6       16
-//   (PA2 = A7 is the USB virtual COM port TX, so avoid it)
-//
-#define TRIG_GPIO        GPIOB               // GPIOA or GPIOB
-#define TRIG_GPIO_EN     RCC_AHB2ENR_GPIOBEN  // RCC_AHB2ENR_GPIOAEN or _GPIOBEN
-#define TRIG_PIN         0                    // pin number within the port
-#define TRIG_ADC_CH      15                    // ADC1 channel from the table
+// Trigger Voltage Pin
+#define LEVEL_GPIO       GPIOA
+#define LEVEL_GPIO_EN    RCC_AHB2ENR_GPIOAEN
+#define LEVEL_PIN        5                    
+#define LEVEL_ADC_CH     10
+#define LEVEL_ADC_SMP    6u                   
+#define LEVEL_AVERAGE    8u                   
 
-// ---------------- User settings ----------------
-#define VREF_MV            3300u   // VDDA on the Nucleo board
+//  Sampling
+#define SAMPLE_RATE_HZ   100000u   // ADC samples per second 
+// ADC sample time. Amount of cycles for a sample
+#define ADC_SMP          5u
+
+//  Frame
+#define FRAME_SAMPLES       640u   // one sample per pixel for each coloumn
+#define PRETRIGGER_SAMPLES  160u   // samples shown before the trigger. For step responses
+#define AUTO_TIMEOUT_MS     100u   // no trigger this long still send a frame over
+
+//  Trigger 
+#define VREF_MV            3300u   // 4095 counts = 3.3 V 
 #define ADC_MAX            4095u   // 12-bit ADC
-#define TRIGGER_LEVEL_MV   1000u   // trigger threshold (1.65 V)
-#define HYSTERESIS_MV      500u    // must drop this far below level to re-arm
+#define HYSTERESIS_MV      500u    // must drop this far below the level to retrigger
 
-// ---------------- Functions ----------------
 
-// Set up PA0 and ADC1, then arm the trigger. Call once at startup.
+//  Functions
+
+// Set up the pin, ADC, DMA and TIM6, then start capturing the first frame
 void trigger_init(void);
 
-// Take one ADC sample and run the trigger logic.
-// Returns 1 if a rising-edge trigger happened on this sample, 0 otherwise.
-// Prints a message to the debugger on each trigger.
-uint8_t trigger_update(void);
+// 1 when a complete frame is waiting to be sent
+uint8_t trigger_frame_ready(void);
 
-// Read one raw 12-bit ADC sample from PA0.
-uint16_t adc_read(void);
+// Return the pointer for the array of measured voltages for our frame since 
+const uint16_t *trigger_get_frame(void);
 
-// Convert ADC counts to millivolts.
+// 1 if the frame was captured on a trigger, 0 if it came from the auto timeout
+uint8_t trigger_frame_was_triggered(void);
+
+// Call after you've finished with the frame to start capturing the next one
+void trigger_rearm(void);
+
+// Trigger level and re-arm level (in ADC counts) used for the current frame
+uint16_t trigger_get_level(void);
+uint16_t trigger_get_rearm_level(void);
+
+// Convert ADC counts to millivolts
 uint32_t counts_to_mv(uint16_t counts);
 
-#endif // TRIGGER_H
+#endif
+
