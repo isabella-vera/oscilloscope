@@ -1,6 +1,6 @@
 // modified from https://www.fpga4fun.com/VGA.html
 
-module vga_sine_test(output logic vga_h_sync, vga_v_sync, R, G, B);
+module vga_colors(output logic vga_h_sync, vga_v_sync, R, G, B);
 
     // 48 MHz / 2 = 24 MHz pixel clock (nominal is 25.175 MHz)
     logic clk;
